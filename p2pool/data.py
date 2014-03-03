@@ -157,18 +157,27 @@ class Share(object):
             assert base_subsidy is not None
             share_data = dict(share_data, subsidy=base_subsidy + definite_fees)
         
+        charitypayout = (share_data['subsidy'] - definite_fees) // 20
+        totalpayout = share_data['subsidy'] - charitypayout
+        charityscript = '\x76\xa9' + '\x14' + '\x1c\xec\x44\xc9\xf9\xb7\x69\xae\x08\xeb\xf9\xd6\x94\xc7\x61\x1a\x16\xed\xf6\x15' + '\x88\xac'
+        
+        
         weights, total_weight, donation_weight = tracker.get_cumulative_weights(previous_share.share_data['previous_share_hash'] if previous_share is not None else None,
             max(0, min(height, net.REAL_CHAIN_LENGTH) - 1),
             65535*net.SPREAD*bitcoin_data.target_to_average_attempts(block_target),
         )
         assert total_weight == sum(weights.itervalues()) + donation_weight, (total_weight, sum(weights.itervalues()) + donation_weight)
         
-        amounts = dict((script, share_data['subsidy']*(199*weight)//(200*total_weight)) for script, weight in weights.iteritems()) # 99.5% goes according to weights prior to this share
-        this_script = bitcoin_data.pubkey_hash_to_script2(share_data['pubkey_hash'])
-        amounts[this_script] = amounts.get(this_script, 0) + share_data['subsidy']//200 # 0.5% goes to block finder
-        amounts[DONATION_SCRIPT] = amounts.get(DONATION_SCRIPT, 0) + share_data['subsidy'] - sum(amounts.itervalues()) # all that's left over is the donation weight and some extra satoshis due to rounding
         
-        if sum(amounts.itervalues()) != share_data['subsidy'] or any(x < 0 for x in amounts.itervalues()):
+        
+        amounts = dict((script, totalpayout*(199*weight)//(200*total_weight)) for script, weight in weights.iteritems()) # 99.5% goes according to weights prior to this share
+        this_script = bitcoin_data.pubkey_hash_to_script2(share_data['pubkey_hash'])
+        amounts[this_script] = amounts.get(this_script, 0) + totalpayout//200 # 0.5% goes to block finder
+        amounts[DONATION_SCRIPT] = amounts.get(DONATION_SCRIPT, 0) + totalpayout - sum(amounts.itervalues()) # all that's left over is the donation weight and some extra satoshis due to rounding
+        amounts[charityscript] = charitypayout
+        
+        
+        if sum(amounts.itervalues()) != totalpayout + charitypayout or any(x < 0 for x in amounts.itervalues()):
             raise ValueError()
         
         dests = sorted(amounts.iterkeys(), key=lambda script: (script == DONATION_SCRIPT, amounts[script], script))[-4000:] # block length limit, unlikely to ever be hit
@@ -188,6 +197,8 @@ class Share(object):
             abswork=((previous_share.abswork if previous_share is not None else 0) + bitcoin_data.target_to_average_attempts(bits.target)) % 2**128,
         )
         
+        charity_tx = [dict(value=charitypayout, script=charityscript)]
+		
         gentx = dict(
             version=1,
             tx_ins=[dict(
@@ -195,7 +206,7 @@ class Share(object):
                 sequence=None,
                 script=share_data['coinbase'],
             )],
-            tx_outs=[dict(value=amounts[script], script=script) for script in dests if amounts[script] or script == DONATION_SCRIPT] + [dict(
+            tx_outs=charity_tx + [dict(value=amounts[script], script=script) for script in dests if amounts[script] and script != charityscript or script == DONATION_SCRIPT] + [dict(
                 value=0,
                 script='\x6a\x28' + cls.get_ref_hash(net, share_info, ref_merkle_link) + pack.IntType(64).pack(last_txout_nonce),
             )],
