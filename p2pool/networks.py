@@ -844,7 +844,25 @@ nets = dict(
         ANNOUNCE_CHANNEL='#p2pool-alt',
         VERSION_CHECK=lambda v: True,
     ),
-
+    einsteinium=math.Object(
+        PARENT=networks.nets['einsteinium'],
+        SHARE_PERIOD=12, # seconds
+        CHAIN_LENGTH=24*60*60//10, # shares
+        REAL_CHAIN_LENGTH=24*60*60//10, # shares
+        TARGET_LOOKBEHIND=100, # shares
+        SPREAD=30, # blocks
+        IDENTIFIER='a0cfe405c16bc7ab'.decode('hex'),
+        PREFIX='afcc0aecfe4c05d9'.decode('hex'),
+        P2P_PORT=24006,
+        MIN_TARGET=0,
+        MAX_TARGET=2**256//2**20 - 1,
+        PERSIST=False,
+        WORKER_PORT=24007,
+        BOOTSTRAP_ADDRS='emc2.gr2pool.eu'.split(' '),
+        ANNOUNCE_CHANNEL='#gr2pool',
+        VERSION_CHECK=lambda v: True,
+    ),
+    
 )
 for net_name, net in nets.iteritems():
     net.NAME = net_name
