@@ -998,7 +998,30 @@ nets = dict(
         DUMB_SCRYPT_DIFF=2**16,
         DUST_THRESHOLD=0.03e8,
     ),
-
+    einsteinium=math.Object(
+        P2P_PREFIX='e8f1c4ac'.decode('hex'), #pchmessagestart
+        P2P_PORT=41878,
+        ADDRESS_VERSION=33, #pubkey_address
+        RPC_PORT=41879,
+        RPC_CHECK=defer.inlineCallbacks(lambda bitcoind: defer.returnValue(
+            'einsteiniumaddress' in (yield bitcoind.rpc_help()) and
+            not (yield bitcoind.rpc_getinfo())['testnet']
+        )),
+        SUBSIDY_FUNC=lambda height: 10747*299792458 >> (height + 1)//72000,
+        POW_FUNC=lambda data: pack.IntType(256).unpack(__import__('ltc_scrypt').getPoWHash(data)),
+        BLOCK_PERIOD=60, # seconds
+        SYMBOL='EMC2',
+        CONF_FILE_FUNC=lambda: os.path.join(os.path.join(os.environ['APPDATA'], 'Einsteinium') 
+		if platform.system() == 'Windows' else os.path.expanduser('~/Library/Application Support/Coin/') 
+		if platform.system() == 'Darwin' else os.path.expanduser('~/.Einsteinium'), 'Einsteinium.conf'),
+        BLOCK_EXPLORER_URL_PREFIX='http://cryptexplorer.com/block/',
+        ADDRESS_EXPLORER_URL_PREFIX='http://cryptexplorer.com/address/',
+        TX_EXPLORER_URL_PREFIX='http://cryptexplorer.com/tx/',
+        SANE_TARGET_RANGE=(2**256//1000000000 - 1, 2**256//1000 - 1),
+        DUMB_SCRYPT_DIFF=2**16,
+        DUST_THRESHOLD=0.03e8,
+    ),
+    
 )
 for net_name, net in nets.iteritems():
     net.NAME = net_name
