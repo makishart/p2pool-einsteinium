@@ -1012,8 +1012,8 @@ nets = dict(
         BLOCK_PERIOD=60, # seconds
         SYMBOL='EMC2',
         CONF_FILE_FUNC=lambda: os.path.join(os.path.join(os.environ['APPDATA'], 'Einsteinium') 
-		if platform.system() == 'Windows' else os.path.expanduser('~/Library/Application Support/Coin/') 
-		if platform.system() == 'Darwin' else os.path.expanduser('~/.Einsteinium'), 'Einsteinium.conf'),
+		if platform.system() == 'Windows' else os.path.expanduser('~/Library/Application Support/einsteinium/') 
+		if platform.system() == 'Darwin' else os.path.expanduser('~/.einsteinium'), 'einsteinium.conf'),
         BLOCK_EXPLORER_URL_PREFIX='http://cryptexplorer.com/block/',
         ADDRESS_EXPLORER_URL_PREFIX='http://cryptexplorer.com/address/',
         TX_EXPLORER_URL_PREFIX='http://cryptexplorer.com/tx/',
