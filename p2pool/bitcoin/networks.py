@@ -1007,7 +1007,7 @@ nets = dict(
             'einsteiniumaddress' in (yield bitcoind.rpc_help()) and
             not (yield bitcoind.rpc_getinfo())['testnet']
         )),
-        SUBSIDY_FUNC=lambda height: 10747*299792458 >> (height + 1)//72000,
+        SUBSIDY_FUNC=lambda height: 1044.48*299792458 >> (height + 1)//72000,
         POW_FUNC=lambda data: pack.IntType(256).unpack(__import__('ltc_scrypt').getPoWHash(data)),
         BLOCK_PERIOD=60, # seconds
         SYMBOL='EMC2',
